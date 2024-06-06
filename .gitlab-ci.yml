@@ -1,0 +1,41 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  NODE_ENV: 'development'
+
+cache:
+  paths:
+    - node_modules/
+
+before_script:
+  - npm install
+
+build:
+  stage: build
+  script:
+    - echo "Building the project..."
+    - npm run build
+  only:
+    - main
+
+test:
+  stage: test
+  script:
+    - echo "Running tests..."
+    - npm test
+  only:
+    - merge_requests
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying the project..."
+    - ./deploy.sh
+  only:
+    - main
+  environment:
+    name: production
+    url: https://your-production-url.com
