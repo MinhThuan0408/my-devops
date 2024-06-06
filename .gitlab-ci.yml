@@ -1,41 +1,59 @@
-stages:
-  - build
-  - test
-  - deploy
+name: CI
 
-variables:
-  NODE_ENV: 'development'
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
-cache:
-  paths:
-    - node_modules/
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-before_script:
-  - npm install
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-build:
-  stage: build
-  script:
-    - echo "Building the project..."
-    - npm run build
-  only:
-    - main
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-test:
-  stage: test
-  script:
-    - echo "Running tests..."
-    - npm test
-  only:
-    - merge_requests
+      - name: Install dependencies
+        run: npm install
 
-deploy:
-  stage: deploy
-  script:
-    - echo "Deploying the project..."
-    - ./deploy.sh
-  only:
-    - main
-  environment:
-    name: production
-    url: https://your-production-url.com
+      - name: Build project
+        run: npm run build
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Deploy
+        run: ./deploy.sh
